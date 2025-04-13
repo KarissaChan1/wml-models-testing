@@ -1,0 +1,51 @@
+Model Directory Mapping
+================================================================================
+
+Model: WML_False_Positive_Training_SC-UNET_fp-cf_sc-fp_cf5
+Path: WML_False_Positive_Training/SC-UNET/fp-cf/sc-fp_cf5/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_False_Positive_Training_SC-UNET_nfp-cf_sc-nfp_cf5
+Path: WML_False_Positive_Training/SC-UNET/nfp-cf/sc-nfp_cf5/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_fine_tune_on_MICCAI-GS_30EP_fold_1
+Path: WML_GS_SS_Training/SC-UNET/fine_tune_on_MICCAI-GS_30EP/fold_1/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_fine_tune_on_MICCAI-GS_75EP_fold_1
+Path: WML_GS_SS_Training/SC-UNET/fine_tune_on_MICCAI-GS_75EP/fold_1/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_individual_datasets_GS_75EP_ADNI
+Path: WML_GS_SS_Training/SC-UNET/individual_datasets_GS_75EP/ADNI/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_individual_datasets_GS_75EP_CAIN
+Path: WML_GS_SS_Training/SC-UNET/individual_datasets_GS_75EP/CAIN/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_individual_datasets_GS_75EP_CCNA
+Path: WML_GS_SS_Training/SC-UNET/individual_datasets_GS_75EP/CCNA/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_pre_train_on_CAIN-SS_30EP_fold_1
+Path: WML_GS_SS_Training/SC-UNET/pre_train_on_CAIN-SS_30EP/fold_1/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_GS_SS_Training_SC-UNET_pre_train_on_CAIN-SS_75EP_fold_1
+Path: WML_GS_SS_Training/SC-UNET/pre_train_on_CAIN-SS_75EP/fold_1/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_Multi-View_Training_U-Net_Axial Model_model_files
+Path: WML_Multi-View_Training/U-Net/Axial Model/model_files/models/model_unet_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_Stroke_Multi-Class_Training_SC-UNET False Positive Multi Class
+Path: WML_Stroke_Multi-Class_Training/SC-UNET False Positive Multi Class/models/model_scunetmulticlass_GDL.hdf5
+--------------------------------------------------------------------------------
+
+Model: WML_Vascular_Lesion_Training_SC-UNET_all_data
+Path: WML_Vascular_Lesion_Training/SC-UNET/all_data/models/model_scunet_GDL.hdf5
+--------------------------------------------------------------------------------
+

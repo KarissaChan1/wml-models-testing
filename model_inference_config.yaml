@@ -1,0 +1,34 @@
+volume_input_dir: "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/test_inference_data/Standardized/V2"
+model_root_path: "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/_Models/Neuro/WML/RA Models"
+output_dir: "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/inference_outputs/RA Models"
+
+models:
+  - name: "WML_False_Positive_Training_SC-UNET_fp-cf_sc-fp_cf5"
+    path: "WML_False_Positive_Training/SC-UNET/fp-cf/sc-fp_cf5/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_False_Positive_Training_SC-UNET_nfp-cf_sc-nfp_cf5"
+    path: "WML_False_Positive_Training/SC-UNET/nfp-cf/sc-nfp_cf5/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_GS_SS_Training_SC-UNET_fine_tune_on_MICCAI-GS_30EP_fold_1"
+    path: "WML_GS_SS_Training/SC-UNET/fine_tune_on_MICCAI-GS_30EP/fold_1/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_GS_SS_Training_SC-UNET_fine_tune_on_MICCAI-GS_75EP_fold_1"
+    path: "WML_GS_SS_Training/SC-UNET/fine_tune_on_MICCAI-GS_75EP/fold_1/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_GS_SS_Training_SC-UNET_individual_datasets_GS_75EP_fold_1"
+    path: "WML_GS_SS_Training/SC-UNET/individual_datasets_GS_75EP/fold_1/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_GS_SS_Training_SC-UNET_pre_train_on_CAIN-SS_30EP_fold_1"
+    path: "WML_GS_SS_Training/SC-UNET/pre_train_on_CAIN-SS_30EP/fold_1/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_GS_SS_Training_SC-UNET_pre_train_on_CAIN-SS_75EP_fold_1"
+    path: "WML_GS_SS_Training/SC-UNET/pre_train_on_CAIN-SS_75EP/fold_1/models/model_scunet_GDL.hdf5"
+
+  - name: "WML_Multi-View_Training_U-Net_Axial"
+    path: "WML_Multi-View_Training/U-Net/Axial Model/model_files/models/model_unet_GDL.hdf5"
+
+  - name: "WML_Stroke_Multi-Class_Training_SC-UNET_False_Positive_Multi_Class"
+    path: "WML_Stroke_Multi-Class_Training/SC-UNET False Positive Multi Class/models/model_scunetmulticlass_GDL.hdf5"
+
+  - name: "WML_Vascular_Lesion_Training_SC-UNET_all_data"
+    path: "WML_Vascular_Lesion_Training/SC-UNET/all_data/models/model_scunet_GDL.hdf5"
