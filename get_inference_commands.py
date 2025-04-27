@@ -25,6 +25,8 @@ def main():# Load configuration
     commands.append("cd /Users/karissachan/Documents/GitHub/wml-segmentation")
     commands.append("poetry env use 3.10.11")
     commands.append("poetry shell")
+    commands.append("If need to re-generate silver standard SCUNET WML masks, run the following command:")
+    commands.append(f"wml_inference -v {input_volume_dir} -m ./models/model_scunet_GDL.hdf5 -c scunet -s '/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/test_inference_data/Task/WML_Reoriented'")
     commands.append("\n# Then run each of these inference commands:")
     
     # Loop through models and run inference

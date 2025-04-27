@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime
 import logging
 
-# usage: python3 compute_dsc.py --root_dir '/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/inference_outputs/RA Models' --ss_dir '/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/test_inference_data/Task/WML'
+# usage: python3 compute_dsc.py --root_dir '/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/inference_outputs/RA Models' --ss_dir '/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/test_inference_data/Task/WML' --xls_path '/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/test_inference_data/sampled_data.xlsx'
 
 
 # Set up logging configuration
@@ -111,11 +111,14 @@ def main():
                       help='Root directory containing multiple test folders')
     parser.add_argument('--ss_dir', type=str, required=True,
                       help='Directory containing silver standard masks')
+    parser.add_argument('--xls_path', type=str, required=True,
+                      help='Path to the xlsx file of sampled test data')
     
     args = parser.parse_args()
     
     root_path = Path(args.root_dir)
     all_results = []
+    dataset_tracker = pd.read_excel(args.xls_path)
     
     # Process each test folder (model output) in the root directory
     for test_folder in sorted(root_path.iterdir()):
@@ -145,27 +148,62 @@ def main():
     # Create DataFrame for all results
     df_results = pd.DataFrame(all_results, columns=['Filename', 'DSC', 'Model'])
     
+    # Extract volume name from filename (assuming filename format is vol_name.nii.gz)
+    df_results['vol_name'] = df_results['Filename']
+    
+    # Merge with dataset_tracker to get dataset_name
+    df_results = df_results.merge(
+        dataset_tracker[['vol_name', 'dataset_name']], 
+        on='vol_name', 
+        how='left'
+    )
+    
     # Calculate summary statistics per model
-    summary_stats = df_results.groupby('Model').agg({
+    model_summary = df_results.groupby('Model').agg({
         'DSC': ['mean', 'std', 'count']
     }).round(4)
     
-    # Flatten column names
-    summary_stats.columns = ['Mean DSC', 'Std DSC', 'Number of Cases']
-    summary_stats = summary_stats.reset_index()
+    # Flatten column names for model summary
+    model_summary.columns = ['Mean DSC', 'Std DSC', 'Number of Cases']
+    model_summary = model_summary.reset_index()
+    model_summary = model_summary.sort_values('Model')
+    
+    # Calculate summary statistics per dataset
+    dataset_summary = df_results.groupby('dataset_name').agg({
+        'DSC': ['mean', 'std', 'count']
+    }).round(4)
+    
+    # Flatten column names for dataset summary
+    dataset_summary.columns = ['Mean DSC', 'Std DSC', 'Number of Cases']
+    dataset_summary = dataset_summary.reset_index()
+    dataset_summary = dataset_summary.sort_values('dataset_name')
+    
+    # Calculate detailed summary statistics (Model x Dataset)
+    detailed_summary = df_results.groupby(['Model', 'dataset_name']).agg({
+        'DSC': ['mean', 'std', 'count']
+    }).round(4)
+    
+    # Flatten column names for detailed summary
+    detailed_summary.columns = ['Mean DSC', 'Std DSC', 'Number of Cases']
+    detailed_summary = detailed_summary.reset_index()
+    detailed_summary = detailed_summary.sort_values(['Model', 'dataset_name'])
     
     # Generate output filename with timestamp
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     output_file = os.path.join(args.root_dir, f'dsc_scores_comparison_{timestamp}.xlsx')
     
-    # Create Excel writer object with both sheets
+    # Create Excel writer object with all sheets
     with pd.ExcelWriter(output_file, engine='openpyxl') as writer:
         df_results.to_excel(writer, sheet_name='Individual Scores', index=False)
-        summary_stats.to_excel(writer, sheet_name='Summary by Model', index=False)
+        model_summary.to_excel(writer, sheet_name='Summary by Model', index=False)
+        dataset_summary.to_excel(writer, sheet_name='Summary by Dataset', index=False)
+        detailed_summary.to_excel(writer, sheet_name='Detailed Summary', index=False)
     
-    # Print summary to console
+    # Print summaries to console
     print("\nResults Summary by Model:")
-    print(summary_stats.to_string(index=False))
+    print(model_summary.to_string(index=False))
+    print("\nResults Summary by Dataset:")
+    print(dataset_summary.to_string(index=False))
     print(f"\nResults saved to: {output_file}")
 
 if __name__ == "__main__":

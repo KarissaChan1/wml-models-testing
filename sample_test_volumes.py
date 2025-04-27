@@ -6,9 +6,10 @@ import random
 import shutil
 import argparse
 
+# SAMPLE TEST VOLUMES FROM ORIGINAL NEURO DB VOLUMES
 # usage: python3 sample_test_volumes.py --data_path "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/Neuro_DB" --out_path "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/Karissa Chan/NeuroAI Pipeline/wml_segmentation_testing/test_inference_data" --dataset_names ADNI CAIN ONDRI CCNA --n_vols 5
 
-def sample_test_volumes(data_path, dataset_names, out_path, n_vols):
+def sample_test_volumes(data_path, dataset_names, out_path, n_vols, standardization_folders):
     """
     Samples test volumes from each dataset and saves them to the output directory.
     
@@ -17,46 +18,56 @@ def sample_test_volumes(data_path, dataset_names, out_path, n_vols):
         out_path (str): Path to the output directory
         dataset_names (list): List of dataset names to sample from
         n_vols (int): Number of volumes to sample from each dataset
+        standardization_folders (list): List of standardization folder names (e.g., ['V2', 'V4'])
     """
 
     sampled_data = []
     random.seed(42)
 
-    # Create output directories
-    out_path_v2 = os.path.join(out_path, 'Standardized/V2')
-    out_path_v4 = os.path.join(out_path, 'Standardized/V4')
-    out_path_mask = os.path.join(out_path, 'Task/WML')
-    os.makedirs(out_path_v2, exist_ok=True)
-    os.makedirs(out_path_v4, exist_ok=True)
-    os.makedirs(out_path_mask, exist_ok=True)
-    
+    # Create output directories for each standardization folder and mask
+    out_paths = {}
+    for std_folder in standardization_folders:
+        std_path = os.path.join(out_path, f'Standardized/{std_folder}')
+        os.makedirs(std_path, exist_ok=True)
+        out_paths[std_folder] = std_path
+    # Mask output
+    mask_out_path = os.path.join(out_path, 'Task/WML')
+    os.makedirs(mask_out_path, exist_ok=True)
+    out_paths['Task/WML'] = mask_out_path
+
     # Sample volumes
     for dataset_name in dataset_names:
         print(f"Sampling {n_vols} volumes from dataset: {dataset_name}")
         try:
-            vol_path_v2 = os.path.join(data_path, f'Standardized/V2/{dataset_name}')
-            vol_path_v4 = os.path.join(data_path, f'Standardized/V4/{dataset_name}')
+            # Build source paths for each standardization folder
+            vol_paths = {}
+            for std_folder in standardization_folders:
+                vol_path = os.path.join(data_path, f'Standardized/{std_folder}/{dataset_name}')
+                # Special case for ADNI and V2
+                if dataset_name == 'ADNI' and std_folder == 'V2':
+                    vol_path = os.path.join(vol_path, 'standardized')
+                vol_paths[std_folder] = vol_path
+            # Mask path
             mask_path = os.path.join(data_path, f'Task/WML/{dataset_name}')
 
-            if dataset_name == 'ADNI':
-                vol_path_v2 = vol_path_v2 + '/standardized'
-            
             # Check if all required directories exist
-            if not all(os.path.exists(path) for path in [vol_path_v2, vol_path_v4, mask_path]):
+            all_dirs = list(vol_paths.values()) + [mask_path]
+            if not all(os.path.exists(path) for path in all_dirs):
                 print(f"Warning: One or more required directories missing for dataset {dataset_name}, skipping...")
                 continue
-            
-            # Get list of volumes for the current dataset
+
+            # Get list of volumes for the current dataset (from the first standardization folder)
             try:
-                vol_list = os.listdir(vol_path_v2)
+                first_std_folder = standardization_folders[0]
+                vol_list = os.listdir(vol_paths[first_std_folder])
                 if not vol_list:
-                    print(f"Warning: No volumes found in {vol_path_v2}, skipping dataset {dataset_name}")
+                    print(f"Warning: No volumes found in {vol_paths[first_std_folder]}, skipping dataset {dataset_name}")
                     continue
-                
+
                 if len(vol_list) < n_vols:
                     print(f"Warning: Dataset {dataset_name} has fewer volumes ({len(vol_list)}) than requested ({n_vols}), adjusting sample size...")
                     n_vols = len(vol_list)
-                
+
             except PermissionError:
                 print(f"Error: No permission to access directory for dataset {dataset_name}, skipping...")
                 continue
@@ -70,42 +81,62 @@ def sample_test_volumes(data_path, dataset_names, out_path, n_vols):
             # Copy sampled volumes to output directory
             for vol in sampled_vols:
                 try:
-                    # Check if volume already exists in any output directory
-                    out_v2_file = os.path.join(out_path_v2, vol)
-                    out_v4_file = os.path.join(out_path_v4, vol)
-                    out_mask_file = os.path.join(out_path_mask, vol)
-                    
-                    if any(os.path.exists(path) for path in [out_v2_file, out_v4_file, out_mask_file]):
-                        print(f"Warning: Volume {vol} already exists in output directory, skipping...")
+                    # Track which files to process
+                    paths_to_process = []
+                    out_files = {}
+                    src_files = {}
+
+                    # For each standardization folder
+                    for std_folder in standardization_folders:
+                        out_file = os.path.join(out_paths[std_folder], vol)
+                        src_file = os.path.join(vol_paths[std_folder], vol)
+                        out_files[std_folder] = out_file
+                        src_files[std_folder] = src_file
+                        if not os.path.exists(out_file):
+                            paths_to_process.append((src_file, out_file, std_folder))
+                        else:
+                            print(f"Warning: Volume {vol} already exists in {std_folder} output directory, skipping {std_folder}...")
+
+                    # Mask file
+                    out_mask_file = os.path.join(out_paths['Task/WML'], vol)
+                    mask_src = os.path.join(mask_path, vol)
+                    out_files['mask'] = out_mask_file
+                    src_files['mask'] = mask_src
+                    if not os.path.exists(out_mask_file):
+                        paths_to_process.append((mask_src, out_mask_file, 'mask'))
+                    else:
+                        print(f"Warning: Volume {vol} already exists in mask output directory, skipping mask...")
+
+                    if not paths_to_process:
+                        print(f"All outputs already exist for volume {vol}, skipping entirely...")
                         continue
 
                     # Check if all source files exist
-                    v2_src = os.path.join(vol_path_v2, vol)
-                    v4_src = os.path.join(vol_path_v4, vol)
-                    mask_src = os.path.join(mask_path, vol)
-                    
-                    if not all(os.path.isfile(path) for path in [v2_src, v4_src, mask_src]):
+                    if not all(os.path.isfile(src) for src, _, _ in paths_to_process):
                         print(f"Warning: Missing one or more source files for volume {vol} in dataset {dataset_name}, skipping...")
                         continue
-                    
-                    shutil.copy(v2_src, out_v2_file)
-                    shutil.copy(v4_src, out_v4_file)
-                    shutil.copy(mask_src, out_mask_file)
 
-                    sampled_data.append({
+                    # Copy files
+                    for src, dst, folder in paths_to_process:
+                        shutil.copy(src, dst)
+
+                    # Record sampled data
+                    record = {
                         'dataset_name': dataset_name,
                         'vol_name': vol,
-                        'vol_path_v2': out_v2_file,
-                        'vol_path_v4': out_v4_file,
                         'mask_path': out_mask_file
-                    })
+                    }
+                    for std_folder in standardization_folders:
+                        record[f'vol_path_{std_folder}'] = out_files[std_folder]
+                    sampled_data.append(record)
+
                 except PermissionError:
                     print(f"Error: Permission denied while copying volume {vol} from dataset {dataset_name}, skipping...")
                     continue
                 except Exception as e:
                     print(f"Error copying volume {vol} from dataset {dataset_name}: {str(e)}, skipping...")
                     continue
-                
+
         except Exception as e:
             print(f"Unexpected error processing dataset {dataset_name}: {str(e)}, skipping...")
             continue
@@ -122,6 +153,8 @@ def sample_test_volumes(data_path, dataset_names, out_path, n_vols):
     else:
         print("Warning: No volumes were successfully sampled")
     
+    return sampled_data
+
 def find_matching_file(directory, base_filename):
     """
     Find a file in the directory that matches the base filename, regardless of .nii or .nii.gz extension
@@ -162,7 +195,7 @@ def sample_original_volumes(out_path, excel_path):
         excel_path (str): Path to the excel file containing the list of volumes to sample
     """
 
-    original_data_path = "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/Shared drives/_NeuroMRI_DB"
+    original_data_path = "/Users/karissachan/Library/CloudStorage/GoogleDrive-karissa.chan@torontomu.ca/.shortcut-targets-by-id/1viatHUAHD50HMOlRolRwJpIe5FbFBz62/Neuro_DB/Original_Reoriented"
     print(f"Sampling original volumes from {original_data_path}")
     dest_path = os.path.join(out_path, 'Original')
     os.makedirs(dest_path, exist_ok=True)
@@ -172,10 +205,7 @@ def sample_original_volumes(out_path, excel_path):
         dataset_name = row['dataset_name']
         vol_name = row['vol_name']
 
-        vol_path = os.path.join(original_data_path, f'{dataset_name}/FLAIR/NIFTI')
-
-        if dataset_name == 'ADNI':
-            vol_path = vol_path + '/Original'
+        vol_path = os.path.join(original_data_path, f'{dataset_name}_FLAIR')
 
         matching_file = find_matching_file(vol_path, vol_name)
 
@@ -212,9 +242,17 @@ def main():
     # ['ADNI','CAIN','CCNA','ONDRI']
     parser.add_argument('--n_vols', type=int, default=5, help='Number of volumes to sample from each dataset')
     parser.add_argument('--original_vols', type=bool, default=True, help='Whether to sample original volumes')
+    parser.add_argument('--std_folders', type=str, nargs='+', default=['V2', 'V4'],
+                        help="List of standardization folders to use (default: ['V2', 'V4'])")
     args = parser.parse_args()
     
-    sample_test_volumes(args.data_path, args.dataset_names, args.out_path, args.n_vols)
+    sample_test_volumes(
+        args.data_path,
+        args.dataset_names,
+        args.out_path,
+        args.n_vols,
+        args.std_folders
+    )
     if args.original_vols:
         sample_original_volumes(args.out_path, os.path.join(args.out_path, 'sampled_data.xlsx'))
 
